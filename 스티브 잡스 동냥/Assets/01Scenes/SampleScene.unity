@@ -221,7 +221,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::itemGenerator
   applePrefab: {fileID: 5676066417186225029, guid: 9f75febcf2c758c44828b6a43ac9a18e, type: 3}
   bombPrefab: {fileID: 4948093013608726174, guid: 7bafdad47651f0549af40f3b5ec2df97, type: 3}
-  ratio: 2
+  ratio: 1
 --- !u!4 &184932668
 Transform:
   m_ObjectHideFlags: 0
