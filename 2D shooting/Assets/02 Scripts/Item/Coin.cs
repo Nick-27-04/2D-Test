@@ -20,8 +20,11 @@ public class Coin : Items.Item, IEffect
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        Debug.Log("무다다다다닥");
         if (collision.gameObject.tag == "Player")
         {
+            Debug.Log("무다무다");
+
             ApplyItem();
 
         }

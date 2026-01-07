@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1696644132884265655}
   - component: {fileID: 1313233281597467124}
   - component: {fileID: 8255409620103631656}
+  - component: {fileID: -2321923842858271703}
   m_Layer: 11
   m_Name: SpeedUp
   m_TagString: Untagged
@@ -129,3 +130,15 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0}
   m_Size: {x: 0.99999994, y: 1.9999999}
   m_Direction: 0
+--- !u!114 &-2321923842858271703
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8537910662656175137}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cfdec7729db3734f850f87947b904e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpeedUp
