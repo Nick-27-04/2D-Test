@@ -46,6 +46,7 @@ public class KeyManager : MonoBehaviour
             isKeyPut[1] = false;
             keyImages[1].color = new Color(1, 1, 1, 0.5f);
         }
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
 
@@ -58,6 +59,7 @@ public class KeyManager : MonoBehaviour
             isKeyPut[2] = false;
             keyImages[2].color = new Color(1, 1, 1, 0.5f);
         }
+
         if (Input.GetKeyDown(KeyCode.J))
         {
 
@@ -70,6 +72,7 @@ public class KeyManager : MonoBehaviour
             isKeyPut[3] = false;
             keyImages[3].color = new Color(1, 1, 1, 0.5f);
         }
+
         if (Input.GetKeyDown(KeyCode.K))
         {
 
