@@ -15,10 +15,11 @@ public class PlayerController : MonoBehaviour
     AudioSource audioSource;
     public AudioClip deathClip;
 
+
     private void Start()
     {
         playerRigidbody = GetComponent<Rigidbody2D>();
-        animator = GetComponent<Animator>();    
+        animator = GetComponent<Animator>(); 
         audioSource = GetComponent<AudioSource>();
 
         //ÃÊ±âÈ­
@@ -51,7 +52,7 @@ public class PlayerController : MonoBehaviour
 
     void Die()
     {
-        
+
         animator.SetTrigger("DIe");
         audioSource.clip = deathClip;
         audioSource.Play();
@@ -74,7 +75,7 @@ public class PlayerController : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D coll)
     {
-       
+
 
         if (coll.contacts[0].normal.y>0.7)
         {
