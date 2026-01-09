@@ -1,19 +1,18 @@
 using UnityEngine;
 
-public class Monster : MonoBehaviour
+public class Player : MonoBehaviour
 {
-    GameObject monster;
-    public float moveSpeed;
 
+    public PlayerData PData;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
+       
     }
 
     // Update is called once per frame
     void Update()
     {
-        transform.Translate(Vector3.right * moveSpeed * Time.deltaTime,Space.World);
+        
     }
 }
