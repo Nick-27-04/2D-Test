@@ -2,51 +2,67 @@ using UnityEngine;
 
 public class Monster : MonoBehaviour
 {
-    GameObject monster;
-    public float moveSpeed;
+    public float moveSpeed = 2f;
+    private bool isDead = false;
+    private Rigidbody rb;
+
+    void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+    }
+
+    void Update()
+    {
+        if (!isDead) // 죽었을 때는 이동 중지
+        {
+            transform.Translate(Vector3.left * moveSpeed * Time.deltaTime, Space.World);
+        }
+    }
 
     public void Die()
     {
+        if (isDead) return; // 중복 죽음 방지
+        isDead = true;
+
+        // 1. 애니메이션 트리거 (스위치 켜기)
         GetComponent<Animator>().SetTrigger("isDead");
-        GetComponent<Collider>().enabled = false;
 
-        // 현재 오브젝트의 부모를 삭제 (전체 삭제)
-        if (transform.parent != null)
+        // 2. 물리 연출: 찌그러뜨리기 (Scale 변경)
+        transform.localScale = new Vector3(1.2f, 0.2f, 1.2f);
+
+        // 3. 물리 연출: 위로 팝! 튀어 오르기
+        if (rb != null)
         {
-            Destroy(transform.parent.gameObject, 0.5f);
+            GetComponent<Collider>().enabled = false; // 콜라이더를 꺼서 바닥 아래로 추락 유도
+            rb.linearVelocity = new Vector3(0, 8f, 0); // 위로 점프
         }
-        else
-        {
-            Destroy(gameObject, 0.5f);
-        }
+
+        // 4. 부모가 있으면 부모까지 포함해서 삭제
+        GameObject targetToDestroy = transform.parent != null ? transform.parent.gameObject : gameObject;
+        Destroy(targetToDestroy, 1.0f);
     }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        transform.Translate(Vector3.left * moveSpeed * Time.deltaTime,Space.World);
-    }
-    // Monster ��ũ��Ʈ �ȿ� �߰��ϼ���
     private void OnCollisionEnter(Collision collision)
     {
-        // 1. �浹�� ��ü�� �÷��̾����� Ȯ��
+        if (isDead) return;
+
         if (collision.gameObject.CompareTag("Player"))
         {
-            // 2. �÷��̾��� ��ġ�� ������ ��ġ���� ������ Ȯ�� (��Ҵ��� �Ǵ�)
-            // contact.normal.y�� -0.7f ���� ������ ������ �Ʒ��� �浹�ߴٴ� ���Դϴ�.
+            // 작성하신 normal.y 판정 로직
             if (collision.contacts[0].normal.y < -0.7f)
             {
                 Die();
 
-                // (����) �÷��̾ ��¦ ���� ƨ�ܿ����� �����
+                // 플레이어 튕겨주기
                 Rigidbody playerRb = collision.gameObject.GetComponent<Rigidbody>();
-                playerRb.linearVelocity = new Vector2(playerRb.linearVelocity.x, 7f);
+                if (playerRb != null)
+                {
+                    playerRb.linearVelocity = new Vector3(playerRb.linearVelocity.x, 7f, 0);
+                }
+            }
+            else
+            {
+                Debug.Log("플레이어 피격!");
             }
         }
     }
