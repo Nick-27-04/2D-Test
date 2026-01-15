@@ -7,6 +7,10 @@ TagManager:
   - Enemy
   - Ground
   - Block
+  - Gumba
+  - Turtle
+  - Flower
+  - mushroom
   layers:
   - Default
   - TransparentFX
@@ -14,9 +18,9 @@ TagManager:
   - 
   - Water
   - UI
-  - 
-  - 
-  - 
+  - Coin
+  - Player
+  - Block
   - 
   - 
   - 

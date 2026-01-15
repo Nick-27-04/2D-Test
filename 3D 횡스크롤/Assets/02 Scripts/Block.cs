@@ -5,7 +5,7 @@ public class Block : MonoBehaviour
 {
     [Header("블록 설정")]
 
-  
+
     public bool isInfinite = false; //true면 무한,false면 hitCount만큼만
     public int hitCount = 1;        //칠 수 있는 횟수 (islnfinite가 false일 때만 작동)
 
@@ -14,6 +14,8 @@ public class Block : MonoBehaviour
 
     public Color usedColor = Color.blue; //다 쓰면 변할 색상
     private Renderer blockRenderer; //블록 외형(색상)을 담당하는 컴포넌트
+
+    public GameObject coinPrefab; //코인 프리펩 드래그창
 
     private void Start()
     {
@@ -24,6 +26,9 @@ public class Block : MonoBehaviour
     public void OnHit()
     {
         if (isAnimating || isUsed) return; // 이미 쳤다면 무시
+
+        //코인 생성 함수 호출
+        SpawnCoin();
        
         StartCoroutine(BounceStep()); //애니메이션 시작
 
@@ -38,7 +43,16 @@ public class Block : MonoBehaviour
                 ChangeBlockColor();
             }
         }
+
+        void SpawnCoin()
+        {
+            if (coinPrefab != null)
+            {
+                Instantiate(coinPrefab, transform.position + Vector3.up * 3.0f, Quaternion.identity);
+            }
+        }
     }
+   
 
     void ChangeBlockColor()
     {
