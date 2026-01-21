@@ -1,62 +1,58 @@
+ï»¿using System.Collections;
 using UnityEngine;
-using System.Collections;
 
 public class Coin : MonoBehaviour
 {
-    public float jumpHeight = 2.0f; //¾ó¸¶³ª ³ôÀÌ Æ¥Áö
-    public float duration = 0.5f; //Æ¢¾î ¿Ã¶ú´Ù ³»·Á¿À´Â ÃÑ ½Ã°£ duration = Áö¼Ó½Ã°£,Áö¼Ó,¼Ò¿ä½Ã°£
-    public float rotateSpeed = 720f; // È¸Àü ¼Óµµ
+    public float jumpHeight = 2.0f;
+    public float duration = 0.5f;
+    public float rotateSpeed = 720f;
 
+    private bool isSlammed = false; // âœ… ë°©í–¥ ì €ì¥ìš© ë³€ìˆ˜
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    // âœ… ë¸”ë¡ì—ì„œ ë°©í–¥ì„ ì„¤ì •í•´ì¤„ í•¨ìˆ˜
+    public void SetupDirection(bool slammed)
+    {
+        isSlammed = slammed;
+    }
+
     void Start()
     {
-        //»ı¼ºµÇÀÚ¸¶ÀÚ Á¡ÇÁ ½ÃÀÛ!
         StartCoroutine(CoinJump());
-
-        //2.ÆÄ±«ÇÏ±â
-        Destroy(gameObject,duration+0.1f);
+        Destroy(gameObject, duration + 0.1f);
     }
-   
-       // Update is called once per frame
+
     void Update()
     {
         transform.Rotate(Vector3.up * rotateSpeed * Time.deltaTime);
-      //  transform.Rotate(Vector3.left * rotateSpeed * Time.deltaTime);
     }
 
-
     IEnumerator CoinJump()
-    { 
-       Vector3 startPos = transform.position;
-        Vector3 targetPos = startPos + Vector3.up * jumpHeight;
+    {
+        Vector3 startPos = transform.position;
+        // âœ… ë°©í–¥ì— ë”°ë¼ ëª©í‘œ ìœ„ì¹˜ ì„¤ì • (ìœ„ì—ì„œ ì°ìœ¼ë©´ ì•„ë˜ë¡œ, ì•„ë˜ì„œ ì¹˜ë©´ ìœ„ë¡œ)
+        Vector3 moveDir = isSlammed ? Vector3.down : Vector3.up;
+        Vector3 targetPos = startPos + moveDir * jumpHeight;
 
-        float halfDuration = duration / 2f;
         float elapsed = 0f;
+        float halfDuration = duration / 2f;
 
-        //1. À§·Î Æ÷¹°¼± ±×¸®¸ç ¿Ã¶ó°¡±â 
-        while (elapsed < duration / 2)
-        { 
-          transform.position = Vector3.Lerp(startPos, targetPos, elapsed/(duration/2));
+        // 1. ëª©í‘œ ì§€ì ê¹Œì§€ ì´ë™
+        while (elapsed < halfDuration)
+        {
+            transform.position = Vector3.Lerp(startPos, targetPos, elapsed / halfDuration);
             elapsed += Time.deltaTime;
             yield return null;
         }
 
-        //2.´Ù½Ã ¾Æ·¡·Î ³»·Á¿À±â
+        // 2. ë‹¤ì‹œ ì›ë˜ ìœ„ì¹˜(ë¸”ë¡ ì•ˆìª½)ë¡œ ëŒì•„ì˜¤ê¸°
         elapsed = 0;
-        while (elapsed < duration / 2)
+        while (elapsed < halfDuration)
         {
-            transform.position = Vector3.Lerp(targetPos, startPos, elapsed / (duration / 2));
+            transform.position = Vector3.Lerp(targetPos, startPos, elapsed / halfDuration);
             elapsed += Time.deltaTime;
-            yield return null;  
+            yield return null;
         }
-        transform.position = startPos;
 
-       //ÄÚÀÎ È¹µæ Ã³¸® (Á¡¼ö Ãß°¡ µî ) ÈÄ ÆÄ±«
-       Destroy(gameObject);
+        Destroy(gameObject);
     }
-
-
-
- 
 }

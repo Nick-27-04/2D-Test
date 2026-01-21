@@ -1,101 +1,119 @@
-using UnityEngine;
-using System.Collections; // ÄÚ·çÆ¾À» ¾²·Á¸é ÀÌ°Ô ²À ÇÊ¿äÇØ!
+ï»¿using UnityEngine;
+using System.Collections;
 
 public class Block : MonoBehaviour
 {
-    [Header("ºí·Ï ¼³Á¤")]
+    public enum BlockType { CoinBlock, MushroomBlock }
 
+    [Header("ë¸”ë¡ ì„¤ì •")]
+    public BlockType bType;
+    public bool isInfinite = false;
+    public int hitCount = 1;
+    public Color usedColor = Color.blue;
 
-    public bool isInfinite = false; //true¸é ¹«ÇÑ,false¸é hitCount¸¸Å­¸¸
-    public int hitCount = 1;        //Ä¥ ¼ö ÀÖ´Â È½¼ö (islnfinite°¡ falseÀÏ ¶§¸¸ ÀÛµ¿)
+    [Header("ì•„ì´í…œ í”„ë¦¬íŒ¹")]
+    public GameObject mushroomPrefab;
+    public GameObject coinPrefab;
 
-    private bool isAnimating = false; //Áßº¹ ½ÇÇà ¹æÁö¿ë
-    private bool isUsed = false; // ¿ÏÀüÈ÷ ´Ù ½è´ÂÁö È®ÀÎ
-
-    public Color usedColor = Color.blue; //´Ù ¾²¸é º¯ÇÒ »ö»ó
-    private Renderer blockRenderer; //ºí·Ï ¿ÜÇü(»ö»ó)À» ´ã´çÇÏ´Â ÄÄÆ÷³ÍÆ®
-
-    public GameObject coinPrefab; //ÄÚÀÎ ÇÁ¸®Æé µå·¡±×Ã¢
+    private bool isAnimating = false;
+    private bool isUsed = false;
+    private Renderer blockRenderer;
+    private PlayerJH player;
 
     private void Start()
     {
-        //½ÃÀÛÇÒ ¶§ RendererÃ£±â
         blockRenderer = GetComponent<Renderer>();
+
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+        {
+            player = playerObj.GetComponent<PlayerJH>();
+        }
+        else
+        {
+            Debug.LogError("í”Œë ˆì´ì–´ë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤! ë§ˆë¦¬ì˜¤ ì˜¤ë¸Œì íŠ¸ì˜ Tagë¥¼ 'Player'ë¡œ ì„¤ì •í–ˆëŠ”ì§€ í™•ì¸í•˜ì„¸ìš”.");
+        }
     }
 
-    public void OnHit()
+    public void OnHit(float playerY)
     {
-        if (isAnimating || isUsed) return; // ÀÌ¹Ì ÃÆ´Ù¸é ¹«½Ã
+        // ì• ë‹ˆë©”ì´ì…˜ ì¤‘ì´ê±°ë‚˜ ì´ë¯¸ ë‹¤ ì“´ ë¸”ë¡ì´ë©´ ë¬´ì‹œ
+        if (isAnimating || player == null) return;
+        if (isUsed && !isInfinite) return;
 
-        //ÄÚÀÎ »ı¼º ÇÔ¼ö È£Ãâ
-        SpawnCoin();
-       
-        StartCoroutine(BounceStep()); //¾Ö´Ï¸ŞÀÌ¼Ç ½ÃÀÛ
+        // 1. ìœ„ì—ì„œ ë‚´ë ¤ì°ê¸° íŒì • (íšŒì „ ê³µê²© ì¤‘ì¼ ë•Œë§Œ!)
+        // í”Œë ˆì´ì–´ ë°œ ìœ„ì¹˜ê°€ ë¸”ë¡ ì¤‘ì‹¬ë³´ë‹¤ ë†’ê³  + rotateCountê°€ trueì—¬ì•¼ í•¨
+        bool isSlammedFromAbove = (playerY > transform.position.y + 0.5f) && player.rotateCount;
 
-        if (!isInfinite)
+        // 2. ì•„ë˜ì—ì„œ ë¨¸ë¦¬ë¡œ ì¹˜ê¸° íŒì • (íšŒì „ ìƒê´€ ì—†ìŒ)
+        bool isHitFromBelow = (playerY < transform.position.y - 0.5f);
+
+        // âœ… ê·¸ëƒ¥ ì°©ì§€(rotateCountê°€ false)í•˜ë©´ ì—¬ê¸°ì„œ ê±¸ëŸ¬ì ¸ì„œ ì•„ë¬´ ì¼ë„ ì•ˆ ì¼ì–´ë‚¨
+        if (isSlammedFromAbove || isHitFromBelow)
         {
-            hitCount--;
-            if (hitCount == 0)
-            {
-                isUsed =true;
-                
-                Debug.Log("ÀÌ ºí·ÏÀº ´Ù »ç¿ëÇÔ");
-                ChangeBlockColor();
-            }
-        }
+            StartCoroutine(BounceStep(isSlammedFromAbove));
+            SpawnItem(isSlammedFromAbove);
 
-        void SpawnCoin()
-        {
-            if (coinPrefab != null)
+            if (!isInfinite)
             {
-                Instantiate(coinPrefab, transform.position + Vector3.up * 3.0f, Quaternion.identity);
+                hitCount--;
+                if (hitCount <= 0)
+                {
+                    isUsed = true;
+                    ChangeBlockColor();
+                }
             }
         }
     }
-   
 
-    void ChangeBlockColor()
+    private void SpawnItem(bool slammed)
+    {
+        Vector3 spawnDirection = slammed ? Vector3.down : Vector3.up;
+        GameObject itemToSpawn = (bType == BlockType.CoinBlock) ? coinPrefab : mushroomPrefab;
+
+        if (itemToSpawn != null)
+        {
+            GameObject instance = Instantiate(itemToSpawn, transform.position + spawnDirection, Quaternion.identity);
+            Coin coinScript = instance.GetComponent<Coin>();
+            if (coinScript != null)
+            {
+                coinScript.SetupDirection(slammed);
+            }
+        }
+    }
+
+    private void ChangeBlockColor()
     {
         if (blockRenderer != null)
-        {
-            //¸ŞÅ×¸®¾óÀÇ »ö»óÀ» Á÷Á¢ º¯°æÇÕ´Ï´Ù.
             blockRenderer.material.color = usedColor;
-        }
     }
 
-    IEnumerator BounceStep()
+    IEnumerator BounceStep(bool slammed)
     {
-        isAnimating =true;
-
-        Vector3 startPos = transform.position; //ÇöÁ¦ À§Ä¡ ÀúÀå
-        Vector3 targetPos = startPos + new Vector3(0, 0.5f, 0); //
-        // 1. À§·Î ÀÌµ¿ÇÏ´Â ·ÎÁ÷
+        isAnimating = true;
         float duration = 0.1f;
         float time = 0f;
+        Vector3 startPos = transform.position;
+        // ë‚´ë ¤ì°í˜”ì„ ë•ŒëŠ” ë¸”ë¡ì´ ì•„ë˜ë¡œ(-0.5), ë¨¸ë¦¬ë¡œ ì³¤ì„ ë•ŒëŠ” ìœ„ë¡œ(+0.5) íŠ•ê¹€
+        Vector3 targetPos = slammed ? startPos + new Vector3(0, -0.5f, 0) : startPos + new Vector3(0, 0.5f, 0);
 
         while (time < duration)
         {
-            //Lerp´Â 'A¿¡¼­ B±îÁö ºñÀ²(time)¸¸Å­ ÀÌµ¿'ÇÏ´Â ÇÔ¼ö
-            transform.position = Vector3.Lerp(startPos, targetPos, time/ duration);
-            time += Time.deltaTime;  //ÇÁ·¹ÀÓ¸¶´Ù ½Ã°£ ´õÇÏ±â
-            yield return null; //´ÙÀ½ ÇÁ·¹ÀÓ±îÁö ´ë±â
+            transform.position = Vector3.Lerp(startPos, targetPos, time / duration);
+            time += Time.deltaTime;
+            yield return null;
         }
-        transform.position = targetPos;
 
-        // 2. Àá½Ã ¾ÆÁÖ Àá±ñ ´ë±â
         yield return new WaitForSeconds(0.02f);
 
         time = 0f;
-        while(time < duration)
+        while (time < duration)
         {
             transform.position = Vector3.Lerp(targetPos, startPos, time / duration);
             time += Time.deltaTime;
             yield return null;
         }
-
-        transform.position = startPos; // ¿ø·¡ À§Ä¡ÀÎ startPos·Î °íÁ¤
-
+        transform.position = startPos;
         isAnimating = false;
-        
     }
 }

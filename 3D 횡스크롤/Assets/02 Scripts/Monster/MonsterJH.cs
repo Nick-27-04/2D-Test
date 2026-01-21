@@ -1,77 +1,116 @@
+ï»¿using Unity.VisualScripting;
 using UnityEngine;
 
 public class MonsterJH : MonoBehaviour
 {
-    public float moveSpeed = 2f;  // °¢ ¸ó½ºÅÍ ÀÌµ¿¼Óµµ
-    private bool isDead = false;  // Á×¾ú³ª È®ÀÎ
-    private Rigidbody rb;  //¿òÁ÷ÀÌ´Â°Ô °¡´ÉÇÏ°Ô ¸¸µé±â
-    public GameObject back;  // °ÅºÏÀÌ µî²®Áú ¿ÀºêÁ§Æ®
+    public float moveSpeed = 2f;  // ê° ëª¬ìŠ¤í„° ì´ë™ì†ë„
+    private bool isDead = false;  // ì£½ì—ˆë‚˜ í™•ì¸
+    private Rigidbody rb;  //ì›€ì§ì´ëŠ”ê²Œ ê°€ëŠ¥í•˜ê²Œ ë§Œë“¤ê¸°
+    public GameObject back;  // ê±°ë¶ì´ ë“±ê»ì§ˆ ì˜¤ë¸Œì íŠ¸
+    public Vector3 spawnRotation; // ê±°ë¶ ë“±ê»ì§ˆ ì¸ìŠ¤í™í„°ì—ì„œ ìˆ˜ì •í•  íšŒì „ê°’ (ì˜ˆ: -90, 90, 0)
+    // public GameObject monster;  //ëª¬ìŠ¤í„° ì˜¤ë¸Œì íŠ¸
+    public GameObject player;  //í”Œë ˆì´ì–´ ì˜¤ë¸Œì íŠ¸
+    public Transform target;  //íƒ€ê¹ƒìœ„ì¹˜
+    bool attackRag = false;  //ê³µê²©ë²”ìœ„ ì•ˆìœ¼ë¡œ ë“¤ì–´ì™”ëŠ”ì§€ í™•ì¸
+    public float randomMoveScale;  //ëœë¤ ë²”ìœ„ì§€ì •
+    public float randomMove;  //ëœë¤ë²”ìœ„
+    public float randomMoveTime;  //ë°©í–¥ì „í™˜ ì‹œê°„ ì„¤ì •
+    public float x, z, timer;  //ìœ„ì¹˜ ì‹œê°„ê°’ ì§€ì •
+    Vector3 look;  //  ë°”ë¼ë³´ëŠ” ë°©í–¥
+    private Animator anim;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        player = GameObject.FindWithTag("Player");
+        target = player.transform;
+        // Instantiate(monster);
+        anim = GetComponentInChildren<Animator>();
+
+        //1.íƒœê·¸ ê±°ë¶ì´ê³ , ì• ë‹ˆë©”ì´í„°ê°€ ìˆì„ ë•Œë§Œ ê±·ê¸° ì‹œì‘
+        if (CompareTag("Turtle") && anim != null)
+        {
+
+            anim.SetBool("isMoving", true);
+        }
     }
 
     void Update()
     {
-        if (!isDead) // Á×¾úÀ» ¶§´Â ÀÌµ¿ ÁßÁö
+        if (!isDead && attackRag) // ì£½ì—ˆì„ ë•Œê°€ ì•„ë‹ˆë©°,ì¸ì‹ë²”ìœ„ ì•ˆìœ¼ë¡œ ë“¤ì–´ì˜¬ ë•Œ ì‘ë™
         {
-            transform.Translate(Vector3.left * moveSpeed * Time.deltaTime, Space.World);
+            transform.Translate(Vector3.forward * moveSpeed * Time.deltaTime, Space.World);  //ë°”ë¼ë³´ëŠ” ë°©í–¥ìœ¼ë¡œ ì›€ì§ì¸ë‹¤
+            transform.LookAt(target);  //í”Œë ˆì´ì–´ë¥¼ ë°”ë¼ë³¸ë‹¤
+        }
+        else if (!isDead)  //ì£½ì—ˆì„ ê²½ìš° ì‘ë™ ì¤‘ì§€
+        {
+            GumbaMove();
+            TurtleMove();
+            FlowerMove();
         }
     }
 
     public void Die()
     {
-        if (CompareTag("Gumba"))  // ÅÂ±×¸íÀÌ ±À¹Ù¶ó¸é
+        if (CompareTag("Gumba"))  // íƒœê·¸ëª…ì´ êµ¼ë°”ë¼ë©´
         {
             GumbaManager(false);
         }
-        if (CompareTag("Turtle"))  // ÅÂ±×¸íÀÌ °ÅºÏÀÌ¶ó¸é
+        if (CompareTag("Turtle"))  // íƒœê·¸ëª…ì´ ê±°ë¶ì´ë¼ë©´
         {
             TurtleManager();
         }
-        if (CompareTag("Flower"))  //  ÅÂ±×¸íÀÌ ²ÉÀÌ¶ó¸é
+        if (CompareTag("Flower"))  //  íƒœê·¸ëª…ì´ ê½ƒì´ë¼ë©´
         {
             FlowerManager();
         }
-        else //³ª¸ÓÁö ÀÏ¹İ ¸ó½ºÅÍµé
+        else //ë‚˜ë¨¸ì§€ ì¼ë°˜ ëª¬ìŠ¤í„°ë“¤
         {
 
         }
 
-        /*if (isDead) return; // Áßº¹ Á×À½ ¹æÁö
+        /*if (isDead) return; // ì¤‘ë³µ ì£½ìŒ ë°©ì§€
         isDead = true;
 
-        // 1. ¾Ö´Ï¸ŞÀÌ¼Ç Æ®¸®°Å (½ºÀ§Ä¡ ÄÑ±â)
+        // 1. ì• ë‹ˆë©”ì´ì…˜ íŠ¸ë¦¬ê±° (ìŠ¤ìœ„ì¹˜ ì¼œê¸°)
         GetComponent<Animator>().SetTrigger("isDead");
 
-        // 2. ¹°¸® ¿¬Ãâ: Âî±×·¯¶ß¸®±â (Scale º¯°æ)
+        // 2. ë¬¼ë¦¬ ì—°ì¶œ: ì°Œê·¸ëŸ¬ëœ¨ë¦¬ê¸° (Scale ë³€ê²½)
         transform.localScale = new Vector3(1.2f, 0.2f, 1.2f);
 
-        // 3. ¹°¸® ¿¬Ãâ: À§·Î ÆË! Æ¢¾î ¿À¸£±â
+        // 3. ë¬¼ë¦¬ ì—°ì¶œ: ìœ„ë¡œ íŒ! íŠ€ì–´ ì˜¤ë¥´ê¸°
         if (rb != null)
         {
-            GetComponent<Collider>().enabled = false; // Äİ¶óÀÌ´õ¸¦ ²¨¼­ ¹Ù´Ú ¾Æ·¡·Î Ãß¶ô À¯µµ
-            rb.linearVelocity = new Vector3(0, 8f, 0); // À§·Î Á¡ÇÁ
+            GetComponent<Collider>().enabled = false; // ì½œë¼ì´ë”ë¥¼ êº¼ì„œ ë°”ë‹¥ ì•„ë˜ë¡œ ì¶”ë½ ìœ ë„
+            rb.linearVelocity = new Vector3(0, 8f, 0); // ìœ„ë¡œ ì í”„
         }
 
-        // 4. ºÎ¸ğ°¡ ÀÖÀ¸¸é ºÎ¸ğ±îÁö Æ÷ÇÔÇØ¼­ »èÁ¦
+        // 4. ë¶€ëª¨ê°€ ìˆìœ¼ë©´ ë¶€ëª¨ê¹Œì§€ í¬í•¨í•´ì„œ ì‚­ì œ
         GameObject targetToDestroy = transform.parent != null ? transform.parent.gameObject : gameObject;
         Destroy(targetToDestroy, 1.0f);*/
     }
 
+    bool isWall = false;
+    private void OnTriggerEnter(Collider other)
+    {
+        attackRag = true;  // tirgerë²”ìœ„ ì•ˆìœ¼ë¡œ ë“¤ì–´ì˜¤ë©´ ì‹¤í–‰
+    }
     private void OnCollisionEnter(Collision collision)
     {
         if (isDead) return;
+        if (collision.gameObject.tag == "Wall")
+        {
+            isWall = true;
+        }
 
         if (collision.gameObject.CompareTag("Player"))
         {
-            // ÀÛ¼ºÇÏ½Å normal.y ÆÇÁ¤ ·ÎÁ÷
+            // ì‘ì„±í•˜ì‹  normal.y íŒì • ë¡œì§
             if (collision.contacts[0].normal.y < -0.7f)
             {
                 Die();
 
-                // ÇÃ·¹ÀÌ¾î Æ¨°ÜÁÖ±â
+                // í”Œë ˆì´ì–´ íŠ•ê²¨ì£¼ê¸°
                 Rigidbody playerRb = collision.gameObject.GetComponent<Rigidbody>();
                 if (playerRb != null)
                 {
@@ -80,44 +119,123 @@ public class MonsterJH : MonoBehaviour
             }
             else
             {
-                Debug.Log("ÇÃ·¹ÀÌ¾î ÇÇ°İ!");
+                Debug.Log("í”Œë ˆì´ì–´ í”¼ê²©!");
             }
         }
-      //  else if (collision.gameObject.CompareTag("Fire"))
+       /* else if (collision.gameObject.CompareTag("Fire"))
         {
-       //     GumbaManager(true);
-       //     Die();
-        }
+            GumbaManager(true);
+            Die();
+        }*/
     }
-    public void GumbaManager(bool fire)  //±À¹Ù¸Ş´ÏÁ®
+    public void GumbaManager(bool fire)  //êµ¼ë°”ë©”ë‹ˆì ¸
     {
-        // 1. ¾Ö´Ï¸ŞÀÌ¼Ç Æ®¸®°Å (½ºÀ§Ä¡ ÄÑ±â)
+        // 1. ì• ë‹ˆë©”ì´ì…˜ íŠ¸ë¦¬ê±° (ìŠ¤ìœ„ì¹˜ ì¼œê¸°)
         GetComponent<Animator>().SetTrigger("isDead");
 
-        // 2. ¹°¸® ¿¬Ãâ: Âî±×·¯¶ß¸®±â (Scale º¯°æ)
+        // 2. ë¬¼ë¦¬ ì—°ì¶œ: ì°Œê·¸ëŸ¬ëœ¨ë¦¬ê¸° (Scale ë³€ê²½)
         if (fire == false)
         {
             transform.localScale = new Vector3(1.2f, 0.2f, 1.2f);
         }
 
-        // 3. ¹°¸® ¿¬Ãâ: À§·Î ÆË! Æ¢¾î ¿À¸£±â
+        // 3. ë¬¼ë¦¬ ì—°ì¶œ: ìœ„ë¡œ íŒ! íŠ€ì–´ ì˜¤ë¥´ê¸°
         if (rb != null)
         {
-            GetComponent<Collider>().enabled = false; // Äİ¶óÀÌ´õ¸¦ ²¨¼­ ¹Ù´Ú ¾Æ·¡·Î Ãß¶ô À¯µµ
-            rb.linearVelocity = new Vector3(0, 8f, 0); // À§·Î Á¡ÇÁ
+            GetComponent<Collider>().enabled = false; // ì½œë¼ì´ë”ë¥¼ êº¼ì„œ ë°”ë‹¥ ì•„ë˜ë¡œ ì¶”ë½ ìœ ë„
+            rb.linearVelocity = new Vector3(0, 8f, 0); // ìœ„ë¡œ ì í”„
         }
-        Destroy(gameObject, 3f);  // 3ÃÊ µÚ »èÁ¦
+        Destroy(gameObject, 3f);  // 3ì´ˆ ë’¤ ì‚­ì œ
     }
-    public void TurtleManager()  // °ÅºÏÀÌ ¸Ş´ÏÁ®
+    public void GumbaMove()  // êµ¼ë°”ì˜ ì›€ì§ì„ ì„¤ì •
     {
-        Instantiate(back, transform.position, Quaternion.identity); // ±× ÀÚ¸®¿¡ µî²®Áú »ı¼º
-        Destroy(gameObject);  // ¹Ù·Î »èÁ¦        
+        timer += Time.deltaTime;
+        if (timer >= randomMoveTime)
+        {
+            x = Random.Range(randomMoveScale, randomMove);
+            z = Random.Range(randomMoveScale, randomMove);
+            look = new Vector3(x, 0, z);
+            transform.rotation = Quaternion.LookRotation(look);
+            timer = 0;
+        }
+        else if (isWall)
+        {
+            x = Random.Range(randomMoveScale, randomMove);
+            z = Random.Range(randomMoveScale, randomMove);
+            look = new Vector3(x, 0, z);
+            transform.rotation = Quaternion.LookRotation(look);
+            timer = 0;
+            isWall = false;
+        }
+        //êµ¼ë°”ëŠ” ëœë¤ìœ¼ë¡œ ì›€ì§ì¸ë‹¤
+        transform.Translate(Vector3.forward * moveSpeed * Time.deltaTime);
+
     }
-    public void FlowerManager()  // ²É ¸Ş´ÏÁ®
+    public void TurtleManager() // ê±°ë¶ì´ ë§¤ë‹ˆì €
     {
-        GetComponent<Collider>().enabled = false;  //Äİ¶óÀÌ´õ¸¦ ²¨¼­ ¸¶¸®¿À¿Í °ãÄ¥ ¼ö ÀÖµµ·Ï À¯µµ
-        GetComponent<Rigidbody>().useGravity = false;  //Åä°ü¿¡ °ÉÄ¡´Â ¿¬ÃâÀ» À§ÇØ ¾Æ·¡·Î Ãß¶ôÀº ¸øÇÏ°Ô ÇÔ
+        // âœ… Quaternion.Eulerë¥¼ ì‚¬ìš©í•˜ì—¬ ì…ë ¥í•œ Vector3 ê°’ì„ íšŒì „ ë°ì´í„°ë¡œ ë³€í™˜í•©ë‹ˆë‹¤.
+        Quaternion targetRotation = Quaternion.Euler(spawnRotation);
+
+        // ì„¤ì •í•œ ê°ë„ë¡œ ë“±ê»ì§ˆ ìƒì„±
+        Instantiate(back, transform.position, targetRotation);
+
+        Destroy(gameObject); // ê±°ë¶ì´ ì‚­ì œ
+    }
+    public void TurtleMove()  //ê±°ë¶ì´ ì›€ì§ì„ ì„¤ì •
+    {
+        //  ê±°ë¶ì´ëŠ” êµ¼ë°”ì™€ ê°™ì´ ì›€ì§ì¸ë‹¤
+        timer += Time.deltaTime;
+        if (timer >= randomMoveTime)
+        {
+            x = Random.Range(randomMoveScale, randomMove);
+            z = Random.Range(randomMoveScale, randomMove);
+            look = new Vector3(x, 0, z);
+            transform.rotation = Quaternion.LookRotation(look);
+            timer = 0;
+        }
+        else if (isWall)
+        {
+            x = Random.Range(randomMoveScale, randomMove);
+            z = Random.Range(randomMoveScale, randomMove);
+            look = new Vector3(x, 0, z);
+            transform.rotation = Quaternion.LookRotation(look);
+            timer = 0;
+            isWall = false;
+        }
+        //ê±°ë¶ì´ëŠ” ëœë¤ìœ¼ë¡œ ì›€ì§ì¸ë‹¤
+        transform.Translate(Vector3.forward * moveSpeed * Time.deltaTime);
+    }
+    public void FlowerManager()  // ê½ƒ ë©”ë‹ˆì ¸
+    {
+        GetComponent<Collider>().enabled = false;  //ì½œë¼ì´ë”ë¥¼ êº¼ì„œ ë§ˆë¦¬ì˜¤ì™€ ê²¹ì¹  ìˆ˜ ìˆë„ë¡ ìœ ë„
+        GetComponent<Rigidbody>().useGravity = false;  //í† ê´€ì— ê±¸ì¹˜ëŠ” ì—°ì¶œì„ ìœ„í•´ ì•„ë˜ë¡œ ì¶”ë½ì€ ëª»í•˜ê²Œ í•¨
         GetComponent<Animator>().SetTrigger("isDead");
-        Destroy(gameObject, 2f);  // 2ÃÊ µÚ »èÁ¦
+        Destroy(gameObject, 2f);  // 2ì´ˆ ë’¤ ì‚­ì œ
     }
+    bool up = true;
+    bool i = true;
+    public void FlowerMove()  //ê½ƒ ì›€ì§ì„ ì„¤ì •
+    {
+
+        timer += Time.deltaTime;
+        if (timer >= 2f && i)
+        {
+            transform.Translate(0, 0, 0);
+            up = !up;
+            i = false;
+        }
+        if (up && timer >= 4f)
+        {
+            transform.Translate(Vector3.up * moveSpeed * Time.deltaTime);
+            timer = 0;
+            i = true;
+        }
+        else if (!up && timer >= 4f)
+        {
+            transform.Translate(Vector3.down * moveSpeed * Time.deltaTime);
+            timer = 0;
+            i = true;
+        }
+    }
+
 }

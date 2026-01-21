@@ -92,8 +92,9 @@ public class Player : MonoBehaviour
                 if (block != null)
                 {
 
-                    block.OnHit();
+                    block.OnHit(transform.position.y);
                 }
+                anim.SetBool("isJumping", false);
 
 
                 anim.SetBool("isJumping", false);
